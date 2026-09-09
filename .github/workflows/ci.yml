@@ -3,20 +3,38 @@
 
 name: CI
 
+# `push` restreint à master, sinon une branche qui a une proposition ouverte est
+# vérifiée deux fois pour le même commit : une fois par la poussée, une fois par
+# la proposition. Les branches de travail passent donc par `pull_request`,
+# master par `push` après fusion.
+#
+# Le rendez-vous hebdomadaire vaut pour les deux jobs : la base de requêtes de
+# CodeQL évolue, et une dépendance ne devient pas vulnérable au moment où on la
+# touche — `govulncheck` sur du code inchangé attrape ce qui a été publié entre
+# deux lots.
 on:
   push:
+    branches: [master]
   pull_request:
+  schedule:
+    - cron: "0 3 * * 1"
 
-# Le jeton du job ne sert qu'à lire le dépôt. Sans cette clause il hérite des
-# permissions par défaut, qui suffisent à écrire — c'est ce dont dispose une
-# action tierce compromise le temps de son exécution.
-permissions:
-  contents: read
+# Une poussée qui en corrige une autre annule le contrôle devenu sans objet.
+# Sauf sur master, dont chaque état publié mérite son résultat.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
   verifier:
     name: Contrôles
     runs-on: ubuntu-latest
+    # Au job et non au workflow : celui-ci n'a rien à écrire, et n'en a donc pas
+    # le droit. Sans clause, il hériterait de permissions suffisantes pour
+    # écrire dans le dépôt — c'est ce dont disposerait une action compromise le
+    # temps de son exécution.
+    permissions:
+      contents: read
     steps:
       # Actions épinglées par empreinte de commit, version en commentaire. Un
       # tag est mutable : celui qui contrôle le dépôt de l'action peut le
@@ -28,22 +46,38 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: "1.27.0"
-      # Le cache de modules peut avoir été rempli par un job précédent : la
-      # vérification confirme que son contenu correspond bien aux sommes de
-      # go.sum avant qu'on compile quoi que ce soit.
-      - name: Modules
-        run: go mod verify
-      # Les contrôles passent par le Makefile plutôt que par des commandes
-      # recopiées ici. C'est ce qui rend l'alignement structurel : tant que les
-      # deux listes existaient côte à côte, elles ont divergé sans bruit — le
-      # job refusait un formatage que `make lint` laissait passer.
-      - name: Outils
-        run: make tools
-      - name: Lint
-        run: make lint
-      - name: Sécurité
-        run: make sec
-      - name: Vulnérabilités
-        run: make vulncheck
-      - name: Tests
-        run: make test
+      # Une seule cible, la même que celle du hook pre-push. Énumérer les
+      # contrôles ici en ferait une seconde liste : c'est par les listes, et non
+      # par les commandes, que le job et le poste avaient fini par diverger — le
+      # premier refusait un formatage que le second acceptait. Le détail de ce
+      # qui échoue est dans la sortie, make nommant la cible fautive.
+      - name: Contrôles
+        run: make controles
+
+  codeql:
+    name: CodeQL
+    needs: verifier
+    runs-on: ubuntu-latest
+    # Enchaîné plutôt que parallèle : l'analyse demande un bundle de près d'un
+    # gigaoctet, inutile de le payer sur du code qui ne passe pas déjà gofmt.
+    #
+    # Analyse de flux, complémentaire de gosec que le job précédent exécute :
+    # gosec reconnaît des motifs, CodeQL suit une donnée depuis son entrée
+    # jusqu'à son emploi. Sur un service dont l'hypothèse de départ est que tout
+    # HTML entrant est hostile, et qui construit des chemins de fichiers à partir
+    # de ce qu'il reçoit, c'est le second qui a des chances de voir quelque
+    # chose. Installé avant qu'il y ait du code, pour qu'il tourne dès la
+    # première ligne plutôt que sur un paquet déjà écrit.
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: "1.27.0"
+      - uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4
+        with:
+          languages: go
+          queries: security-extended
+      - uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4

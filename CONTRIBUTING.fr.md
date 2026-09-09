@@ -18,17 +18,26 @@ sont les deux endroits où une régression ne se voit pas au diff.
 
 ## Avant de pousser
 
-1. `make lint` passe — `gofmt -l .` ne renvoie rien, `go vet ./...` est propre.
-2. `make test` passe.
-3. `make sec` et `make vulncheck` passent.
-4. `make rendu-verif` passe, dans l'image de référence.
-5. La documentation touchée par le lot part dans le même commit.
+1. `make controles` passe — formatage, `go vet`, sommes de `go.sum`, `gosec`,
+   `govulncheck` et tests.
+2. `make rendu-verif` passe, dans l'image de référence.
+3. La documentation touchée par le lot part dans le même commit.
 
-Les quatre premiers points se lancent par `make` et non à la main : c'est la
-même définition que celle qu'exécute l'intégration continue, et deux listes
-tenues en parallèle finissent par diverger sans que rien ne le dise.
+Le premier point se lance tout seul : `.githooks/pre-push` l'exécute avant chaque
+poussée, une fois le hook activé par `git config core.hooksPath .githooks` — à
+faire une fois par clone. `git push --no-verify` le contourne, pour pousser une
+branche de travail qu'on sait cassée.
 
-Le point 5 n'est pas une politesse : `docs/conception.md` fait foi, et un
+Une seule cible, appelée par le hook comme par l'intégration continue. Ce n'est
+pas une commodité : tant que les contrôles étaient énumérés de part et d'autre,
+les deux listes ont divergé sans bruit, et le job refusait un formatage que le
+contrôle local acceptait.
+
+CodeQL est le seul contrôle qu'on ne rejoue pas en local, son analyse demandant
+un bundle de près d'un gigaoctet. Il tourne à chaque proposition sur GitHub, et
+son absence de `make controles` est délibérée.
+
+Le point 3 n'est pas une politesse : `docs/conception.md` fait foi, et un
 document qui prend du retard sur le code devient un vieux papier que plus
 personne ne lit.
 

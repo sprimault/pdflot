@@ -18,15 +18,22 @@ are the two places where a regression does not show up in the diff.
 
 ## Before pushing
 
-1. `make lint` passes — `gofmt -l .` returns nothing, `go vet ./...` is clean.
-2. `make test` passes.
-3. `make sec` and `make vulncheck` pass.
-4. `make rendu-verif` passes, inside the reference image.
-5. Documentation touched by the batch ships in the same commit.
+1. `make controles` passes — formatting, `go vet`, `go.sum` checksums, `gosec`,
+   `govulncheck` and tests.
+2. `make rendu-verif` passes, inside the reference image.
+3. Documentation touched by the batch ships in the same commit.
 
-The first four go through `make` rather than by hand: it is the same definition
-continuous integration runs, and two lists kept in parallel drift apart without
-saying so.
+The first runs on its own: `.githooks/pre-push` calls it before every push, once
+the hook is enabled with `git config core.hooksPath .githooks` — once per clone.
+`git push --no-verify` bypasses it, for pushing a work branch known to be broken.
+
+One target, called by the hook and by continuous integration alike. Not a
+convenience: as long as the checks were listed on both sides, the two lists
+drifted apart silently, and the job refused formatting the local check accepted.
+
+CodeQL is the only check not replayed locally, its analysis requiring a bundle of
+close to a gigabyte. It runs on every proposal on GitHub, and its absence from
+`make controles` is deliberate.
 
 ## Messages
 

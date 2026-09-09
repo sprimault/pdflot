@@ -1,0 +1,17 @@
+#!/bin/sh
+# Copyright 2026 Stéphane Primault <sprimault@users.noreply.github.com>
+# SPDX-License-Identifier: Apache-2.0
+
+# Rejoue avant la poussée ce que l'intégration continue exécutera. La cible est
+# la même des deux côtés : ce fichier n'énumère aucun contrôle, sans quoi il
+# deviendrait la troisième liste à tenir à jour — et c'est par les listes, pas
+# par les commandes, que la CI et le poste avaient fini par diverger.
+#
+# `make rendu-verif` n'y figure pas : il construit l'image et ne peut pas se
+# payer à chaque poussée. Il reste dans la liste de CONTRIBUTING.fr.md.
+#
+# S'active par `git config core.hooksPath .githooks`, une fois par clone.
+# `git push --no-verify` le contourne, pour pousser une branche de travail qu'on
+# sait cassée.
+
+exec make controles

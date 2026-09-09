@@ -13,6 +13,12 @@
 Makefile text eol=lf
 Dockerfile text eol=lf
 
+# Les hooks tournent sous Windows comme sous Linux. Un CRLF y produit un
+# « bad interpreter » sur la ligne de shebang, dont le message ne dit pas la
+# cause. Déclaré plutôt que laissé à l'heuristique de `text=auto`, ces fichiers
+# n'ayant pas d'extension.
+.githooks/* text eol=lf
+
 # Les entrées des lots d'exemple. Elles traversent le poste et l'image, et le
 # rendu doit être le même des deux côtés : un fichier dont les fins de ligne
 # changent d'une machine à l'autre rend le diff d'empreinte ininterprétable, et
