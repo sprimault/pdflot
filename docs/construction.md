@@ -43,6 +43,9 @@ empreintes, faute de quoi l'épinglage deviendrait un gel.
 - `make vulncheck` — `govulncheck` sur les dépendances.
 - `make tools` — installe `gosec` et `govulncheck`, qui ne viennent pas avec la
   distribution Go.
+- `make controles` — tout ce qui précède, plus la vérification des sommes de
+  `go.sum`. C'est la cible qu'appellent le hook `pre-push` et l'intégration
+  continue ; aucun des deux n'en recopie la liste.
 - `make image` — image de référence.
 - `make rendu-verif` — rendus comparés aux empreintes de `testdata/golden`, dans
   l'image. **Doit passer.**

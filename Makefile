@@ -1,4 +1,4 @@
-.PHONY: build test lint sec vulncheck tools image rendu-verif
+.PHONY: build test lint sec vulncheck tools controles image rendu-verif
 
 # Réglages propres à une machine : chemins de cache, prérequis ajoutés aux
 # cibles de contrôle. Le tiret parce que la plupart des machines n'en ont pas.
@@ -33,6 +33,17 @@ vulncheck:
 tools:
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
 	go install golang.org/x/vuln/cmd/govulncheck@latest
+
+# Tout ce qu'il faut passer avant de publier, hors rendu. Une seule définition :
+# le hook pre-push et l'intégration continue appellent cette cible, ils n'en
+# recopient pas la liste. C'est par la liste, et non par les commandes, que les
+# deux avaient fini par diverger.
+#
+# `rendu-verif` n'y est pas : il construit l'image, et ne peut pas se payer à
+# chaque poussée. Il garde sa place à part dans CONTRIBUTING.fr.md.
+controles: tools
+	go mod verify
+	$(MAKE) lint sec vulncheck test
 
 # Les tests de rendu ne valent que dans l'image de référence.
 image:
