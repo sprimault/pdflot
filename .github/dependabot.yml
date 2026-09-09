@@ -1,0 +1,27 @@
+# Copyright 2026 Stéphane Primault <sprimault@users.noreply.github.com>
+# SPDX-License-Identifier: Apache-2.0
+
+version: 2
+updates:
+  # Les dépendances Go. govulncheck signale déjà celles qui sont vulnérables et
+  # dont le code atteint la fonction touchée ; Dependabot, lui, propose la
+  # montée de version. Les deux se complètent : l'un refuse de livrer, l'autre
+  # ouvre le correctif.
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Les actions sont épinglées par empreinte de commit dans les workflows.
+  # Sans cette entrée, l'épinglage deviendrait un gel : plus rien ne signalerait
+  # qu'une action a corrigé une faille. Dependabot met l'empreinte à jour et
+  # laisse le commentaire de version en place.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(ci)"

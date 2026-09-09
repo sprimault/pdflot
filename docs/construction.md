@@ -28,6 +28,12 @@ de sortie de chaque lot.
 Un lot rejoué six mois plus tard doit pouvoir être comparé au précédent. Sans cet
 épinglage, aucune promesse de reproductibilité n'est tenable.
 
+Les actions de l'intégration continue s'épinglent de la même façon, par empreinte
+de commit et non par tag. Un tag est mutable, et c'est le seul code tiers qui
+s'exécute à chaque poussée, avec le jeton du dépôt : le laisser flotter alors
+qu'on épingle Chromium et les polices serait incohérent. Dependabot suit ces
+empreintes, faute de quoi l'épinglage deviendrait un gel.
+
 ## Cibles
 
 - `make build` — binaire local, pour le développement du code hors rendu.
@@ -41,10 +47,13 @@ Un lot rejoué six mois plus tard doit pouvoir être comparé au précédent. Sa
 - `make rendu-verif` — rendus comparés aux empreintes de `testdata/golden`, dans
   l'image. **Doit passer.**
 
-L'intégration continue n'exécute pas autre chose : elle appelle ces mêmes
-cibles. Une commande recopiée dans le workflow serait une seconde définition du
-contrôle, et c'est ainsi que le job a fini par refuser un formatage que
-`make lint` acceptait.
+L'intégration continue appelle ces mêmes cibles plutôt que d'en recopier les
+commandes : une commande recopiée dans le workflow serait une seconde définition
+du contrôle, et c'est ainsi que le job a fini par refuser un formatage que
+`make lint` acceptait. Elle y ajoute ce qui n'a pas de sens en local — la
+vérification des sommes de `go.sum` sur un cache qu'elle n'a pas rempli, et une
+analyse CodeQL qui complète `make sec` en suivant les flux de données là où
+gosec reconnaît des motifs.
 
 ## Réglages propres à une machine
 
