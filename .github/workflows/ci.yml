@@ -55,7 +55,11 @@ jobs:
         run: make controles
 
   codeql:
-    name: CodeQL
+    # Pas « CodeQL » : l'app GitHub Advanced Security publie ses résultats sous
+    # ce nom dès que l'analyse tourne, quoi qu'on fasse. Deux contrôles
+    # homonymes donneraient deux candidats au même contexte requis, sans qu'on
+    # sache lequel la protection de branche observe.
+    name: Analyse de flux
     needs: verifier
     runs-on: ubuntu-latest
     # Enchaîné plutôt que parallèle : l'analyse demande un bundle de près d'un
