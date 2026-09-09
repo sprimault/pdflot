@@ -1,0 +1,32 @@
+# Copyright 2026 Stéphane Primault <sprimault@users.noreply.github.com>
+# SPDX-License-Identifier: Apache-2.0
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verifier:
+    name: Contrôles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.0"
+      # Les contrôles passent par le Makefile plutôt que par des commandes
+      # recopiées ici. C'est ce qui rend l'alignement structurel : tant que les
+      # deux listes existaient côte à côte, elles ont divergé sans bruit — le
+      # job refusait un formatage que `make lint` laissait passer.
+      - name: Outils
+        run: make tools
+      - name: Lint
+        run: make lint
+      - name: Sécurité
+        run: make sec
+      - name: Vulnérabilités
+        run: make vulncheck
+      - name: Tests
+        run: make test

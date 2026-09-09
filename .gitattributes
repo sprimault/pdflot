@@ -1,0 +1,43 @@
+# Normalisation des fins de ligne. Indispensable quand le dépôt est alimenté
+# depuis Windows et consommé sous Linux : sans ça, un script shell ou un test
+# comparant des octets casse de façon incompréhensible.
+* text=auto eol=lf
+
+# Doivent rester en LF quoi qu'il arrive
+*.go text eol=lf
+*.sh text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+Makefile text eol=lf
+Dockerfile text eol=lf
+
+# Les entrées des lots d'exemple. Elles traversent le poste et l'image, et le
+# rendu doit être le même des deux côtés : un fichier dont les fins de ligne
+# changent d'une machine à l'autre rend le diff d'empreinte ininterprétable, et
+# un CRLF à l'intérieur d'un <pre> se voit à l'écran.
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+
+# Spécifiques Windows
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binaire, jamais converti. Les PDF d'abord : la comparaison de rendu passe par
+# leurs pages, et une conversion de fins de ligne appliquée à un flux compressé
+# le détruirait sans rien signaler. Les polices ensuite — l'image épingle les
+# siennes, mais un lot embarque les ressources qu'il utilise, le bac à sable
+# n'en résolvant aucune hors du lot.
+*.pdf binary
+*.zip binary
+*.gz binary
+*.png binary
+*.jpg binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.exe binary

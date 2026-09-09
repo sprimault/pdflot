@@ -1,0 +1,13 @@
+/bin/
+/dist/
+/tmp/
+*.pdf
+*.zip
+!examples/**/*.pdf
+/.tmp/
+/build/
+
+# Go
+*.test
+*.out
+/makefile.local
